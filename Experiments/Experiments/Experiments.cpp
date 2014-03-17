@@ -37,7 +37,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	printf("Test 3: %s \n", (test3 ? "PASS" : "FAIL"));
 	printf("Test 4: %s \n", (test4 ? "PASS" : "FAIL"));
 
-	char cTest = '0';
+	char cTest = 'R';
 	printf("%u \n", cTest);
 	printf("%c \n", cTest);
 
