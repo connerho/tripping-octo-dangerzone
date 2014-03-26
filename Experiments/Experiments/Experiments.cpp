@@ -3,6 +3,12 @@
 
 #include "stdafx.h"
 
+typedef unsigned char *byte_pointer;
+
+bool isEqual(const int &x, const int &y);
+void TestStructure();
+void show_bytes(byte_pointer start, int len);
+
 struct Experiment
 {
 	int foo;
@@ -24,7 +30,7 @@ size_t GetSize(const T &object)
 	return retVal;
 }
 
-int _tmain(int argc, _TCHAR* argv[])
+void TestStructure()
 {
 	int testObject1;
 	Experiment testObject2;
@@ -48,7 +54,45 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	printf("%ld \n", GetSize(testObject2));
 	printf("%ld \n", sizeof(testObject2));
+}
+
+void show_bytes(byte_pointer start, int len)
+{
+	for (int i = 0; i < len; i++)
+	{
+		printf(" %.2x", start[i]);
+	}
+	printf("\n");
+}
+
+template <class T>
+void show(T x)
+{
+	show_bytes((byte_pointer)&x, sizeof(x));
+}
+
+void TestBits()
+{
+	int x = 20;
+	int y = -21;
+	short sx = 20;
+	short sy = -21;
+
+	show(x);
+	show(y);
+
+
+	show(sx);
+	show(sy);
+}
+
+
+int _tmain(int argc, _TCHAR* argv[])
+{
+	TestStructure();
+	TestBits();
 
 	return 0;
 }
+
 
