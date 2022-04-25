@@ -8,18 +8,24 @@
 #define NUM_THREADS 2
 #define NUM_SAMPLES 11
 #define THREAD_ONE_TIMER_MS 50
-#define THRESHOLD 32000
+#define THRESHOLD 31000
+#define MS_TO_NS 1000000
+#define ERROR_CONSTANT 0.15f
 
+// Buffer to store "sound" samples as well as timestamps for when
+// data is being read
+static int16_t soundBuff[NUM_SAMPLES];
+static uint32_t timeBuff[NUM_SAMPLES];
 
-int16_t soundBuff[NUM_SAMPLES];
-uint32_t timeBuff[NUM_SAMPLES];
-uint8_t curIdx;
-uint8_t threshIdx;
+// Variables to keep track of where I am storing data in the cyclical buffers
+// As well as when I am looking at the sample that triggers a threshold check
+static uint8_t curIdx;
+static uint8_t threshIdx;
 
-
+// Keep a running tally of how many samples I have read
 static uint32_t sampleCounter = 0u;
 
-static struct timespec remaining, request = {0, THREAD_ONE_TIMER_MS * 1000000};
+// Timekeeping variables
 static struct timespec progStart, loopStart, loopEnd, readTime;
 
 // Condition variables for signalling between the threads
@@ -27,18 +33,21 @@ static pthread_mutex_t var_modify_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t output_write_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t output_write_cond = PTHREAD_COND_INITIALIZER;
 
+// Flag to tell the output write when to terminate
 static uint8_t endThreads = 0u;
-static uint32_t readTime_ms = 0u;
 
+static clockid_t CLOCK = CLOCK_MONOTONIC;
 
 void* inputReaderThread(void* arg)
 {
   // Time counter to make sure second thread executes every 50ms
-  uint64_t diffTime;
-  time_t newTime;
+  int64_t diffTime_ms;
+  int64_t errorTime_ms = 0;
+  uint32_t readTime_ms = 0u;
   FILE* filePtr = (FILE*)arg;
   size_t retCode;
-  int16_t threshIdx;
+  int dontErrorCorrectFirstLoop = 0;
+  struct timespec remaining, request = {0, THREAD_ONE_TIMER_MS * 1000000};
   while(1)
   {
     pthread_mutex_lock(&var_modify_mutex);
@@ -53,14 +62,12 @@ void* inputReaderThread(void* arg)
       pthread_exit(NULL);
     }
 
-    clock_gettime(CLOCK_REALTIME, &readTime);
+    clock_gettime(CLOCK, &readTime);
     readTime_ms = (readTime.tv_sec - progStart.tv_sec) * 1000 + (readTime.tv_nsec - progStart.tv_nsec) / 1000000;
     timeBuff[curIdx] = readTime_ms;
     sampleCounter++;
-    curIdx++;
-    curIdx = curIdx % NUM_SAMPLES;
-    threshIdx++;
-    threshIdx = threshIdx % NUM_SAMPLES;
+    curIdx = (curIdx + 1) % NUM_SAMPLES;
+    threshIdx = (threshIdx + 1) % NUM_SAMPLES;
     pthread_mutex_unlock(&var_modify_mutex);
 
     if(soundBuff[threshIdx] > THRESHOLD)
@@ -68,17 +75,25 @@ void* inputReaderThread(void* arg)
       pthread_cond_signal(&output_write_cond);
     }
 
-    clock_gettime(CLOCK_REALTIME, &loopEnd);
-    diffTime = (loopEnd.tv_sec - loopStart.tv_sec) * 1000 + (loopEnd.tv_nsec - loopStart.tv_nsec) / 1000000;
+    clock_gettime(CLOCK, &loopEnd);
+    diffTime_ms = (loopEnd.tv_sec - loopStart.tv_sec) * 1000 + (loopEnd.tv_nsec - loopStart.tv_nsec) / 1000000;
 
-    printf("The difference in time was %d ms\n", diffTime);
+    // printf("The difference in time was %d ms\n", diffTime_ms);
 
-    if(diffTime > THREAD_ONE_TIMER_MS)
+    // Dont try to error correct on the first loop
+    if(dontErrorCorrectFirstLoop == 0)
     {
-      request.tv_nsec = (THREAD_ONE_TIMER_MS - (diffTime - THREAD_ONE_TIMER_MS)) * 1000000;
+      dontErrorCorrectFirstLoop++;
+    }
+    // Need to figure out a PID loop here for adjusting the timing correctly
+    // Implementing just a simple proportional controller for now
+    else
+    {
+      errorTime_ms = diffTime_ms - (int64_t)THREAD_ONE_TIMER_MS;
+      request.tv_nsec = (request.tv_nsec - (long)(errorTime_ms * ERROR_CONSTANT * MS_TO_NS));
     }
 
-    clock_gettime(CLOCK_REALTIME, &loopStart);
+    clock_gettime(CLOCK, &loopStart);
     nanosleep(&request, &remaining);
   }
 }
@@ -110,20 +125,22 @@ void* outputWriterThread(void* arg)
       pthread_exit(NULL);
     }
 
+    // Save off the data as quick as we can and then release the mutex before
+    // writing off into a file
     pthread_mutex_lock(&var_modify_mutex);
     triggerNum = sampleCounter - 5;
     timestamp = timeBuff[threshIdx];
-    sample1  = soundBuff[(threshIdx+5)%NUM_SAMPLES];;
-    sample2  = soundBuff[(threshIdx+4)%NUM_SAMPLES];;
-    sample3  = soundBuff[(threshIdx+3)%NUM_SAMPLES];;
-    sample4  = soundBuff[(threshIdx+2)%NUM_SAMPLES];;
-    sample5  = soundBuff[(threshIdx+1)%NUM_SAMPLES];;
+    sample1  = soundBuff[(threshIdx+6)%NUM_SAMPLES];;
+    sample2  = soundBuff[(threshIdx+7)%NUM_SAMPLES];;
+    sample3  = soundBuff[(threshIdx+8)%NUM_SAMPLES];;
+    sample4  = soundBuff[(threshIdx+9)%NUM_SAMPLES];;
+    sample5  = soundBuff[(threshIdx+10)%NUM_SAMPLES];;
     sample6  = soundBuff[threshIdx];
-    sample7  = soundBuff[(threshIdx+10)%NUM_SAMPLES];
-    sample8  = soundBuff[(threshIdx+9)%NUM_SAMPLES];
-    sample9  = soundBuff[(threshIdx+8)%NUM_SAMPLES];
-    sample10 = soundBuff[(threshIdx+7)%NUM_SAMPLES];
-    sample11 = soundBuff[(threshIdx+6)%NUM_SAMPLES];
+    sample7  = soundBuff[(threshIdx+1)%NUM_SAMPLES];
+    sample8  = soundBuff[(threshIdx+2)%NUM_SAMPLES];
+    sample9  = soundBuff[(threshIdx+3)%NUM_SAMPLES];
+    sample10 = soundBuff[(threshIdx+4)%NUM_SAMPLES];
+    sample11 = soundBuff[(threshIdx+5)%NUM_SAMPLES];
     pthread_mutex_unlock(&var_modify_mutex);
 
     fprintf(filePtr, "%d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d\n", 
@@ -140,7 +157,6 @@ void* outputWriterThread(void* arg)
                       sample9,
                       sample10,
                       sample11);
-    printf("Wrote to file\n");
   }
 }
 
@@ -170,8 +186,6 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-  pthread_t thr[NUM_THREADS];
-
   // Initialize our cyclical buffer
   for(int i = 0; i < NUM_SAMPLES; i++)
   {
@@ -179,20 +193,45 @@ int main(int argc, char **argv)
     timeBuff[i] = 0;
   }
   curIdx = 0u;
-  threshIdx = 5u;
+
+  // threshIdx should be offset from current index so that we are 
+  // Always looking at the "middle" sample and that there are 5
+  // samples before the thresholded sample as well as 5 after
+  threshIdx = 5u; 
+
+  // Set the priority of the binary file reading thread
+  // to be high, while the output writing thread to be low.
+  // It is important that the output writer does not block
+  // the reading of input data
+  pthread_attr_t inReadAttr, outWriteAttr;
+  int maxPrio = sched_get_priority_max(SCHED_FIFO); 
+  int minPrio = sched_get_priority_min(SCHED_RR);
+  struct sched_param inReadParam, outWriteParam;
+  inReadParam.sched_priority = maxPrio;
+  outWriteParam.sched_priority = minPrio;
+
+  pthread_attr_init(&inReadAttr);
+  pthread_attr_init(&outWriteAttr);
+  pthread_attr_setinheritsched(&inReadAttr, PTHREAD_EXPLICIT_SCHED);
+  pthread_attr_setinheritsched(&outWriteAttr, PTHREAD_EXPLICIT_SCHED);
+  pthread_attr_setschedpolicy(&inReadAttr, SCHED_FIFO);
+  pthread_attr_setschedpolicy(&outWriteAttr, SCHED_RR);
+  pthread_attr_setschedparam(&inReadAttr, &inReadParam);
+  pthread_attr_setschedparam(&outWriteAttr, &outWriteParam);
 
   // Initialize the time variable
-  clock_gettime(CLOCK_REALTIME, &progStart);
-  clock_gettime(CLOCK_REALTIME, &loopStart);
+  clock_gettime(CLOCK, &progStart);
+  clock_gettime(CLOCK, &loopStart);
 
   // Create threads
   int rc;
-  if( (rc = pthread_create(&thr[1], NULL, outputWriterThread, (void*)outFilePtr)) )
+  pthread_t thr[NUM_THREADS];
+  if( (rc = pthread_create(&thr[1], &outWriteAttr, outputWriterThread, (void*)outFilePtr)) )
   {
     fprintf(stderr, "ERROR: pthread_create outputWriterThread, rc: %d\n", rc);
     return EXIT_FAILURE;
   }
-  if( (rc = pthread_create(&thr[0], NULL, inputReaderThread, (void*)inFilePtr)) )
+  if( (rc = pthread_create(&thr[0], &inReadAttr, inputReaderThread, (void*)inFilePtr)) )
   {
     fprintf(stderr, "ERROR: pthread_create inputReaderThread, rc: %d\n", rc);
     return EXIT_FAILURE;
