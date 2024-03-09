@@ -1,4 +1,23 @@
-SLASH_ROLL_CALL = "/rollcall"
+SLASH_ROLLCALL1 = "/rollcall"
+SLASH_HELLOW1 = "/helloworld"
+SLASH_HELLOW2 = "/hw"
+
+-- define the corresponding slash command handler
+SlashCmdList.ROLLCALL = function(msg, editBox)
+    AuraUtil.ForEachAura("player", "HELPFUL", nil, function(name, icon, ...)
+        print(name, icon, ...)
+    end)
+end
+
+-- define the corresponding slash command handler
+SlashCmdList.HELLOW = function(msg, editBox)
+	local name1, name2 = strsplit(" ", msg)
+	if #name1 > 0 then -- check for empty string
+		print(format("hello %s and also %s", name1, name2 or "Carol"))
+	else
+		print("Please give at least one name")
+	end
+end
 
 local function buffCallback(name, icon, _, _, _, _, _, _, _, spellId, ...)
     -- Check to see if any of the buffs matches the ones we care about
@@ -31,11 +50,8 @@ local function loop_through_raid_members()
     end
 end
 
--- define the corresponding slash command handler
-SlashCmdList.ROLL_CALL = function(msg, editBox)
-    AuraUtil.ForEachAura("player", "HELPFUL", nil, function(name, icon, ...)
-        print(name, icon, ...)
-    end)
-end
-
 read_yaml_file('buffvalues.yaml')
+
+AuraUtil.ForEachAura("player", "HELPFUL", nil, function(name, icon, ...)
+    print(name, icon, ...)
+end)
