@@ -1,8 +1,8 @@
+SLASH_ROLL_CALL = "/rollcall"
+
 local function buffCallback(name, icon, _, _, _, _, _, _, _, spellId, ...)
     -- Check to see if any of the buffs matches the ones we care about
-    if spellId == 21562 then -- Power Word: Fortitude
-        BUFF_VALUE_PAIRING
-    end
+    
 end
 
 local function read_yaml_file(filename)
@@ -22,9 +22,20 @@ local function read_yaml_file(filename)
 end
 
 --[[ Loop through all of the players int he raid ]]
-local buffFound = 0
-BUFF_VALUE_PAIRING = read_yaml_file('buffs.yaml')
-for i = 1, MAX_RAID_MEMBERS do
-    local unit = format("%s%i", 'raid', i)
-    AuraUtil.ForEachAura("player", "HELPFUL", nil, buffCallback)
+local function loop_through_raid_members()
+    local buffFound = 0
+    BUFF_VALUE_PAIRING = read_yaml_file('buffs.yaml')
+    for i = 1, MAX_RAID_MEMBERS do
+        local unit = format("%s%i", 'raid', i)
+        AuraUtil.ForEachAura(unit, "HELPFUL", nil, buffCallback)
+    end
 end
+
+-- define the corresponding slash command handler
+SlashCmdList.ROLL_CALL = function(msg, editBox)
+    AuraUtil.ForEachAura("player", "HELPFUL", nil, function(name, icon, ...)
+        print(name, icon, ...)
+    end)
+end
+
+read_yaml_file('buffvalues.yaml')
