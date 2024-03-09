@@ -1,0 +1,6 @@
+## Interface: 11501
+## Title: HerpsCoolAddon
+## Author: Conner Howell
+## Version: 0.1
+
+main.lua
