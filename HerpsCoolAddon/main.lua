@@ -11,6 +11,9 @@ local buffs_we_care_about = {
     ["Elixir of Frost Power"]       = 5,
     ["Elixir of Firepower"]         = 5,
     ["Elixir of Fortitude"]         = 5,
+    ["Lesser Arcane Elixir"]        = 5,
+    ["Lesser Wizard Oil"]           = 5,
+    ["Dragonbreath Chili"]          = 5,
     ["Well Fed"]                    = 5  -- Will need to do some extra for this because there are different levels of being "fed"
 }
 
