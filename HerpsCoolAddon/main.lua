@@ -1,6 +1,8 @@
 SLASH_ROLLCALL1 = "/rollcall"
 SLASH_WORLDBUFF1 = "/addwb"
 
+local DEBUG = true
+
 -- Let's define our buffs that we care about here
 local buffs_we_care_about = {
     ["Elixir of Agility"]           = 5,
@@ -9,6 +11,7 @@ local buffs_we_care_about = {
     ["Elixir of Frost Power"]       = 5,
     ["Elixir of Firepower"]         = 5,
     ["Elixir of Fortitude"]         = 5,
+    ["Well Fed"]                    = 5  -- Will need to do some extra for this because there are different levels of being "fed"
 }
 
 -- And define world buffs that we care about too 
@@ -21,23 +24,25 @@ local function loopThroughMembersAddPoints(table)
     -- This is how we loop through all of the buff list
     -- Loop through all members in the raid
     local numGroupMembers = GetNumGroupMembers();
-    for i = 1, MAX_RAID_MEMBERS do
-        if (i <= numGroupMembers) then
-            local total_ep = 0
-            name, rank, subgroup = GetRaidRosterInfo(i);
-            -- Loop through all of the buffs that we care about
-            for k, v in pairs(table) do
-                local return_val = AuraUtil.FindAuraByName(k, name)
-                if( return_val == nil ) then
+    for i = 1, numGroupMembers do
+        local total_ep = 0
+        name, rank, subgroup = GetRaidRosterInfo(i);
+        -- Loop through all of the buffs that we care about
+        for k, v in pairs(table) do
+            local return_val = AuraUtil.FindAuraByName(k, name)
+            if( return_val == nil ) then
+                if( DEBUG ) then
                     print(name,"does not have buff",k)
-                else
-                    -- Player does have the buff, let's keep track of additional EP
-                    print(name,"does have buff", k, "adding EP")
-                    total_ep = total_ep + v
                 end
+            else
+                -- Player does have the buff, let's keep track of additional EP
+                if( DEBUG ) then
+                    print(name,"does have buff", k, "adding EP")
+                end
+                total_ep = total_ep + v
             end
-            print(name,"gets", total_ep, "for having buffs")
         end
+        print(name,"gets", total_ep, "for having buffs")
     end
 end
 
@@ -49,27 +54,3 @@ end
 SlashCmdList.ROLLCALL = function(msg, editBox)
     loopThroughMembersAddPoints(buffs_we_care_about)
 end
-
--- C_ChatInfo.SendAddonMessage
---[[
-local prefix = "SomePrefix123"
-local playerName = UnitName("player")
-
-local function OnEvent(self, event, ...)
-    if event == "CHAT_MSG_ADDON" then
-        print(event, ...)
-    elseif event == "PLAYER_ENTERING_WORLD" then
-        local isLogin, isReload = ...
-        if isLogin or isReload then
-            C_ChatInfo.SendAddonMessage(prefix, "You can't see this message", "WHISPER", playerName)
-            C_ChatInfo.RegisterAddonMessagePrefix(prefix)
-            C_ChatInfo.SendAddonMessage(prefix, "Hello world!", "WHISPER", playerName)
-        end
-    end
-end
-
-local f = CreateFrame("Frame")
-f:RegisterEvent("CHAT_MSG_ADDON")
-f:RegisterEvent("PLAYER_ENTERING_WORLD")
-f:SetScript("OnEvent", OnEvent)
-]]--
