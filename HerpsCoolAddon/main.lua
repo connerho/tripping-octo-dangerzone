@@ -9,8 +9,6 @@ local buffs_we_care_about = {
     ["Elixir of Frost Power"]       = 5,
     ["Elixir of Firepower"]         = 5,
     ["Elixir of Fortitude"]         = 5,
-    ["Demon Skin"]                  = 5,
-    ["Blood Pact"]                  = 5,
 }
 
 -- And define world buffs that we care about too 
@@ -49,34 +47,29 @@ end
 
 -- define the corresponding slash command handler
 SlashCmdList.ROLLCALL = function(msg, editBox)
-    -- This is how we loop through all of the buff list
-    -- Loop through all members in the raid
-    local numGroupMembers = GetNumGroupMembers();
-    for i = 1, MAX_RAID_MEMBERS do
-        if (i <= numGroupMembers) then
-            local total_ep = 0
-            name, rank, subgroup = GetRaidRosterInfo(i);
-            -- Loop through all of the buffs that we care about
-            for k, v in pairs(buffs_we_care_about) do
-                local return_val = AuraUtil.FindAuraByName(k, name)
-                if( return_val == nil ) then
-                    print(name,"does not have buff",k)
-                else
-                    -- Player does have the buff, let's keep track of additional EP
-                    print(name,"does have buff", k, "adding EP")
-                    total_ep = total_ep + v
-                end
-            end
-            print(name,"gets", total_ep, "for having buffs")
+    loopThroughMembersAddPoints(buffs_we_care_about)
+end
+
+-- C_ChatInfo.SendAddonMessage
+--[[
+local prefix = "SomePrefix123"
+local playerName = UnitName("player")
+
+local function OnEvent(self, event, ...)
+    if event == "CHAT_MSG_ADDON" then
+        print(event, ...)
+    elseif event == "PLAYER_ENTERING_WORLD" then
+        local isLogin, isReload = ...
+        if isLogin or isReload then
+            C_ChatInfo.SendAddonMessage(prefix, "You can't see this message", "WHISPER", playerName)
+            C_ChatInfo.RegisterAddonMessagePrefix(prefix)
+            C_ChatInfo.SendAddonMessage(prefix, "Hello world!", "WHISPER", playerName)
         end
     end
 end
 
---[[ Loop through all of the players int he raid ]]
-local function loop_through_raid_members()
-    local buffFound = 0
-    for i = 1, MAX_RAID_MEMBERS do
-        local unit = format("%s%i", 'raid', i)
-        AuraUtil.ForEachAura(unit, "HELPFUL", nil, buffCallback)
-    end
-end
+local f = CreateFrame("Frame")
+f:RegisterEvent("CHAT_MSG_ADDON")
+f:RegisterEvent("PLAYER_ENTERING_WORLD")
+f:SetScript("OnEvent", OnEvent)
+]]--
