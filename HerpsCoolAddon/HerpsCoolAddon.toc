@@ -2,5 +2,6 @@
 ## Title: HerpsCoolAddon
 ## Author: Conner Howell
 ## Version: 0.1
+## SavedVariables: EPBuffCountLog_Herp
 
 main.lua

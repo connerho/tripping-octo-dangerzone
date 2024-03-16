@@ -26,6 +26,9 @@ local world_buffs = {
 local function loopThroughMembersAddPoints(table)
     -- This is how we loop through all of the buff list
     -- Loop through all members in the raid
+    if EPBuffCountLog_Herp == nil then
+        EPBuffCountLog_Herp = {}
+    end
     local numGroupMembers = GetNumGroupMembers();
     for i = 1, numGroupMembers do
         local total_ep = 0
@@ -43,6 +46,7 @@ local function loopThroughMembersAddPoints(table)
                     print(name,"does have buff", k, "adding EP")
                 end
                 total_ep = total_ep + v
+                tinsert(EPBuffCountLog_Herp, strjoin(";",name,k,v,time()))
             end
         end
         print(name,"gets", total_ep, "for having buffs")
