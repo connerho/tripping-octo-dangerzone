@@ -5,22 +5,31 @@ local DEBUG = true
 
 -- Let's define our buffs that we care about here
 local buffs_we_care_about = {
-    ["Elixir of Agility"]           = 5,
-    ["Elixir of Ogre Strength"]     = 5,
-    ["Elixir of Greater Defense"]   = 5,
-    ["Elixir of Frost Power"]       = 5,
-    ["Elixir of Firepower"]         = 5,
-    ["Elixir of Fortitude"]         = 5,
-    ["Lesser Arcane Elixir"]        = 5,
-    ["Lesser Wizard Oil"]           = 5,
-    ["Dragonbreath Chili"]          = 5,
-    ["Well Fed"]                    = 5  -- Will need to do some extra for this because there are different levels of being "fed"
+    ["Elixir of the Mongoose"]      = 1,
+    ["Mageblood Potion"]            = 1,
+    ["Elixir of Giants"]            = 1,
+    ["Elixir of Superior Defense"]  = 1,
+    ["Strong Troll's Blood Potion"] = 1,
+    ["Elixir of Fortitude"]         = 1,
+    ["Lesser Arcane Elixir"]        = 1,
+    ["Greater Arcane Elixir"]       = 1,
+    ["Elixir of Shadow Power"]      = 1,
+    ["Elixir of Frost Power"]       = 1,
+    ["Elixir of Fire Power"]        = 1,
+    ["Minor Mana Oil"]              = 1,
+    ["Lesser Wizard Oil"]           = 1,
+    ["Gift of Arthas"]              = 1,
+    ["Winterfall Firewater"]        = 1,
+    ["Rumsey Rum Black Label"]      = 1,
+    ["Dense Sharpening Stone"]      = 1,
+    ["Well Fed"]                    = 1  -- Will need to do some extra for this because there are different levels of being "fed"
 }
 
 -- And define world buffs that we care about too 
 local world_buffs = {
-    ["Boon of Blackfathom"]         = 5,
-    ["Spark of Inspiration"]        = 5,
+    ["Boon of Blackfathom"]             = 1,
+    ["Spark of Inspiration"]            = 1,
+    ["Fervor of the Temple Explorer"]   = 1
 }
 
 local function loopThroughMembersAddPoints(table)
