@@ -5,6 +5,14 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Python Debugger: Current File",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${file}",
+      "console": "integratedTerminal",
+      "justMyCode": false
+    },
+    {
       "name": "KLA Challenge",
       "type": "cppdbg",
       "request": "launch",
@@ -17,11 +25,11 @@
       "MIMode": "gdb",
       "miDebuggerPath": "C:\\MinGW\\bin\\gdb.exe",
       "setupCommands": [
-          {
-              "description": "Enable pretty-printing for gdb",
-              "text": "-enable-pretty-printing",
-              "ignoreFailures": true
-          }
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
       ]
     },
     {
@@ -29,8 +37,10 @@
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/CanaryCodeChallenge/boom.exe",
-      "args": ["samples.bin",
-               "schloopy.txt"],
+      "args": [
+        "samples.bin",
+        "schloopy.txt"
+      ],
       "stopAtEntry": true,
       "cwd": "${workspaceFolder}/CanaryCodeChallenge/",
       "environment": [],
@@ -38,11 +48,11 @@
       "MIMode": "gdb",
       "miDebuggerPath": "C:\\MinGW\\bin\\gdb.exe",
       "setupCommands": [
-          {
-              "description": "Enable pretty-printing for gdb",
-              "text": "-enable-pretty-printing",
-              "ignoreFailures": true
-          }
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
       ]
     }
   ]
